@@ -20,3 +20,5 @@ Imports:
     vctrs
 Remotes:
     tidymodels/rsample@confidence_intervals
+URL: https://github.com/DavisVaughan/rboot
+BugReports: https://github.com/DavisVaughan/rboot/issues
