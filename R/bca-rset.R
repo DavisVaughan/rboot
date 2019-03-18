@@ -14,14 +14,19 @@ boot_bca_rset <- function(rset_mapped, alpha = 0.05) {
 
   .result <- purrr::pluck(rset_mapped, ".result")
   .result <- dplyr::bind_rows(.result)
-  .result <- dplyr::group_by(.result, .statistic)
+  .result <- dplyr::group_by(.result, .statistic, add = TRUE)
 
   .result_apparent <- purrr::pluck(apparent, ".result", 1)
 
-  out <- dplyr::group_map(.result, ~{
+  .result_apparent <- dplyr::ungroup(.result_apparent)
 
-    .x_apparent <- dplyr::filter(.result_apparent, .statistic == .y$.statistic)
-    .x_acceleration <- dplyr::filter(acceleration_tbl, .statistic == .y$.statistic)
+  .apparent_groups <- dplyr::select(.result_apparent, !!!dplyr::groups(.result))
+  acceleration_groups <- dplyr::select(acceleration_tbl, !!!dplyr::groups(.result))
+
+  fn <- function(.x, .y) {
+
+    .x_apparent <- dplyr::filter(.result_apparent, vctrs::vec_equal(.apparent_groups, .y))
+    .x_acceleration <- dplyr::filter(acceleration_tbl, vctrs::vec_equal(acceleration_groups, .y))
 
     calc_boot_bca(
       .x$.estimate,
@@ -30,7 +35,9 @@ boot_bca_rset <- function(rset_mapped, alpha = 0.05) {
       alpha = alpha
     )
 
-  })
+  }
+
+  out <- dplyr::group_map(.result, fn)
 
   out <- dplyr::ungroup(out)
 

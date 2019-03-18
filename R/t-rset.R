@@ -11,13 +11,17 @@ boot_t_rset <- function(rset_mapped, alpha = 0.05) {
 
   .result <- purrr::pluck(rset_mapped, ".result")
   .result <- dplyr::bind_rows(.result)
-  .result <- dplyr::group_by(.result, .statistic)
+  .result <- dplyr::group_by(.result, .statistic, add = TRUE)
 
   .result_apparent <- purrr::pluck(apparent, ".result", 1)
 
+  .result_apparent <- dplyr::ungroup(.result_apparent)
+
+  .apparent_groups <- dplyr::select(.result_apparent, !!!dplyr::groups(.result))
+
   out <- dplyr::group_map(.result, ~{
 
-    .x_apparent <- dplyr::filter(.result_apparent, .statistic == .y$.statistic)
+    .x_apparent <- dplyr::filter(.result_apparent, vctrs::vec_equal(.apparent_groups, .y))
 
     calc_boot_t(
       .x$.estimate,

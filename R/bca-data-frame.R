@@ -36,6 +36,8 @@ boot_bca_df <- function(rset_computed, ..., alpha = 0.05, times = 1000) {
   .result_apparent <- .f(original_split)$.result
   acceleration_tbl <- jacknife_acceleration(original_data, .f)
 
+  .result_apparent <- dplyr::ungroup(.result_apparent)
+
   .apparent_groups <- dplyr::select(.result_apparent, !!!dplyr::groups(.result))
   acceleration_groups <- dplyr::select(acceleration_tbl, !!!dplyr::groups(.result))
 

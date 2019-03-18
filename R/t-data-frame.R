@@ -48,6 +48,8 @@ boot_t_df <- function(rset_computed, ..., std_error_vars = vars(), alpha = 0.05,
 
   .result_apparent <- .f(original_split)$.result
 
+  .result_apparent <- dplyr::ungroup(.result_apparent)
+
   .apparent_groups <- dplyr::select(.result_apparent, !!!dplyr::groups(.result))
 
   out <- dplyr::group_map(.result, ~{
