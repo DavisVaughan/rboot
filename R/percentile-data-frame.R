@@ -22,7 +22,7 @@ boot_pctl_df <- function(rset_computed, ..., alpha = 0.05, times = 1000) {
 
   estimates <- tidyr::gather(estimates, ".statistic", ".estimate", !!!syms_estimates)
 
-  estimates <- group_by(estimates, .statistic, add = TRUE)
+  estimates <- dplyr::group_by(estimates, .statistic, add = TRUE)
 
   out <- dplyr::group_map(estimates, ~calc_boot_pctl(.x$.estimate, alpha = alpha))
   out <- dplyr::ungroup(out)

@@ -26,7 +26,7 @@ boot_bca_df <- function(rset_computed, ..., alpha = 0.05, times = 1000) {
   .result <- dplyr::group_by(.result, .statistic, add = TRUE)
 
   .f <- function(x) {
-    x <- analysis(x)
+    x <- rsample::analysis(x)
     .result <- dplyr::summarise(x, !!!summarise_exprs)
     .result <- dplyr::select(.result, !!!syms_groups, !!!syms_result)
     .result <- tidyr::gather(.result, ".statistic", ".estimate", !!!syms_result)

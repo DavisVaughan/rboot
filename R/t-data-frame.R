@@ -32,7 +32,7 @@ boot_t_df <- function(rset_computed, ..., std_error_vars = vars(), alpha = 0.05,
   .result <- dplyr::group_by(.result, .statistic, add = TRUE)
 
   .f <- function(x) {
-    x <- analysis(x)
+    x <- rsample::analysis(x)
     .result <- dplyr::summarise(x, !!!summarise_exprs)
 
     .result <- purrr::imap_dfr(std_error_vars, ~{
