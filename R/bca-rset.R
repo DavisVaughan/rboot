@@ -8,9 +8,14 @@ boot_bca_rset <- function(rset_mapped, alpha = 0.05) {
   apparent  <- extract_apparent(rset_mapped)
   rset_mapped <- remove_apparent(rset_mapped)
 
-  original_data <- analysis(purrr::pluck(apparent, "splits", 1))
+  original_data <- rsample::analysis(purrr::pluck(apparent, "splits", 1))
 
-  acceleration_tbl <- jacknife_acceleration(original_data, .f_callr)
+  # patch because it expects a split
+  .f_patched_callr <- function(x) {
+    .f_callr(rsample::apparent(x)$splits[[1]])
+  }
+
+  acceleration_tbl <- jacknife_acceleration(original_data, .f_patched_callr)
 
   .result <- purrr::pluck(rset_mapped, ".result")
   .result <- dplyr::bind_rows(.result)
@@ -48,7 +53,7 @@ jacknife_acceleration <- function(data, .f) {
 
   rset_loo <- rsample::loo_cv(data)
 
-  .results <- purrr::map_dfr(rset_loo[["splits"]], ~.f(.x)$.result)
+  .results <- purrr::map_dfr(rset_loo[["splits"]], ~.f(rsample::analysis(.x))$.result)
 
   .results <- dplyr::group_by(.results, .statistic, !!!dplyr::groups(data))
 

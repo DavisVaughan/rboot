@@ -1,25 +1,23 @@
-boot_t_df <- function(rset_computed, ..., std_error_vars = vars(), alpha = 0.05, times = 1000) {
+boot_t_df <- function(data, ..., values = NULL, std_error_vars = vars(), alpha = 0.05, times = 1000) {
 
   std_error_vars <- purrr::map(std_error_vars, rlang::as_label)
 
-  summarise_exprs <- attr(rset_computed, "boot_dots")
+  summarise_exprs <- rlang::enquos(...)
 
-  original_split <- purrr::pluck(rset_computed, "splits", 1)
-  original_data <- rsample::analysis(original_split)
-
-  data_bootstrapped <- strapgod::bootstrapify(original_data, times = times)
+  data_bootstrapped <- strapgod::bootstrapify(data, times = times)
 
   .result <- dplyr::summarise(data_bootstrapped, !!!summarise_exprs)
 
-  syms_groups <- dplyr::groups(original_data)
-  vars_result <- tidyselect::vars_select(names(.result), ...)
+  syms_groups <- dplyr::groups(data)
+  vars_result <- tidyselect::vars_select(names(.result), !!rlang::enquo(values))
+  vars_result <- setdiff(vars_result, ".bootstrap")
 
   # keep all
   if (length(vars_result) == 0L) {
     vars_result <- names(summarise_exprs)
   }
 
-  #std_error_vars <- std_error_vars[vars_result]
+  std_error_vars <- std_error_vars[vars_result %in% names(std_error_vars)]
 
   .result <- purrr::imap_dfr(std_error_vars, ~{
     sym_estimate <- rlang::sym(.y)
@@ -32,7 +30,6 @@ boot_t_df <- function(rset_computed, ..., std_error_vars = vars(), alpha = 0.05,
   .result <- dplyr::group_by(.result, .statistic, add = TRUE)
 
   .f <- function(x) {
-    x <- rsample::analysis(x)
     .result <- dplyr::summarise(x, !!!summarise_exprs)
 
     .result <- purrr::imap_dfr(std_error_vars, ~{
@@ -46,7 +43,7 @@ boot_t_df <- function(rset_computed, ..., std_error_vars = vars(), alpha = 0.05,
     boot_result(.result)
   }
 
-  .result_apparent <- .f(original_split)$.result
+  .result_apparent <- .f(data)$.result
 
   .result_apparent <- dplyr::ungroup(.result_apparent)
 

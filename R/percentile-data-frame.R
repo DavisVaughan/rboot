@@ -1,15 +1,14 @@
-boot_pctl_df <- function(rset_computed, ..., alpha = 0.05, times = 1000) {
+boot_pctl_df <- function(data, ..., values = NULL, alpha = 0.05, times = 1000) {
 
-  summarise_exprs <- attr(rset_computed, "boot_dots")
+  summarise_exprs <- rlang::enquos(...)
 
-  original_data <- rsample::analysis(purrr::pluck(rset_computed, "splits", 1))
-
-  data_bootstrapped <- strapgod::bootstrapify(original_data, times = times)
+  data_bootstrapped <- strapgod::bootstrapify(data, times = times)
 
   estimates <- dplyr::summarise(data_bootstrapped, !!! summarise_exprs)
 
-  syms_groups <- dplyr::groups(original_data)
-  vars_estimates <- tidyselect::vars_select(names(estimates), ...)
+  syms_groups <- dplyr::groups(data)
+  vars_estimates <- tidyselect::vars_select(names(estimates), !!rlang::enquo(values))
+  vars_estimates <- setdiff(vars_estimates, ".bootstrap")
 
   # keep all
   if (length(vars_estimates) == 0L) {
